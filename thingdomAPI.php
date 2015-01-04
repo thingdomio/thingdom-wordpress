@@ -19,7 +19,7 @@ class Thingdom
     const   API_SUCCESS     = 'success';
     const   DEVICE_SECRET   = 'php';
 
-    private $apiSecret      = 'YOUR_APT_SECRET_HERE';
+    private $apiSecret      = 'YOUR_API_SECRET_HERE';
     public  $token;
     public  $lastError = null;
 
