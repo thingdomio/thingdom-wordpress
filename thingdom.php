@@ -41,6 +41,11 @@ if( !class_exists( 'ThingdomWP' )) {
 				'type'			=> 'text',
 				'default'		=> ''
 			),						
+			'comments' => array(
+				'label'			=> 'New comment alerts',
+				'type'			=> 'checkbox',
+				'default'		=> 1
+			),
 			'pages' => array(
 				'label'			=> 'New page alerts',
 				'type'			=> 'checkbox',
@@ -51,7 +56,7 @@ if( !class_exists( 'ThingdomWP' )) {
 				'type'			=> 'checkbox',
 				'default'		=> 1
 			)
-		);		
+		);	
 
 		/**
 		 * Slug used for admin menus.
