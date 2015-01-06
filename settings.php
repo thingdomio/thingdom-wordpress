@@ -15,8 +15,8 @@
 		foreach($this->options as $id => $option) : 
 
 			$attr = array(
-				'id' => $this->tag . '_' . $id,
-				'name' => $this->tag.'_'.$id,
+				'id' => $this->tag.$id,
+				'name' => $this->tag.$id,
 				'type' => $option['type'],
 				'placeholder' => $option['type'] == 'text' ? "placeholder = '{$option['placeholder']}'" : ''
 			);

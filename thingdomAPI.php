@@ -7,7 +7,7 @@
  * @author     Nicholas Kreidberg <nicholas.kreidberg@mts.com>
  * @copyright  2014-2015 MTS Systems
  * @license    http://www.opensource.org/licenses/mit-license.html MIT License
- * @version    1.1
+ * @version    1.1b (Modified specifically for integration with WordPress)
  * @link       https://github.com/thingdomio/php-thingdom
  * @website    https://thingdom.io
  */
@@ -17,11 +17,10 @@ class Thingdom
     const   API_URL         = 'https://api.thingdom.io/1.1/';
     const   API_ERROR       = 'error';
     const   API_SUCCESS     = 'success';
-    const   DEVICE_SECRET   = 'php';
 
-    private $apiSecret      = 'YOUR_API_SECRET_HERE';
+    private $apiSecret      = '2VTUBkdUDGEc3ektwAeFrNbrWDXgExtS7u6JnBkw59JDU8YANEGrNJntCE77tzSSnVnN8btEhZbqkXs49ZEc75dFspbEuR2Mn5v5';
     public  $token;
-    public  $lastError = null;
+    public  $lastError      = null;
 
     //
     // Constructor / Public Methods
@@ -29,12 +28,27 @@ class Thingdom
 
     public function __construct()
     {
-        if( !$this->checkCurl() ) {
+        if(!$this->checkCurl()) {
             throw new Exception('cURL is not enabled on this server');
-        }
-        
-        $this->authenticate();
+        }        
     }
+
+    public function authenticate($deviceSecret = '')
+    {
+        $data = array(
+            'api_secret'    => $this->apiSecret,
+            'device_secret' => $deviceSecret
+        );
+
+        $response = $this->postToThingdom($endpoint = "token", $data);
+        $this->token = $response['application_token'];
+
+        if(empty($deviceSecret)) {
+            return $response['device_secret'];
+        }
+
+        return $deviceSecret;
+    }    
 
     public function getThing($name, $product_type = '')
     {
@@ -44,9 +58,9 @@ class Thingdom
         }
 
         $data = array(
-            'token' => $this->token,
-            'product_type' => $product_type,
-            'name' => $name
+            'token'         => $this->token,
+            'product_type'  => $product_type,
+            'name'          => $name
         );
 
         $response = $this->postToThingdom("thing", $data);
@@ -106,17 +120,6 @@ class Thingdom
     // Private Methods
     //
 
-    private function authenticate()
-    {
-        $data = array(
-            'api_secret' => $this->apiSecret,
-            'device_secret' => self::DEVICE_SECRET
-        );
-
-        $response = $this->postToThingdom($endpoint="token", $data);
-        $this->token = $response['application_token'];
-    }
-
     private function checkCurl()
     {
         return function_exists('curl_version');
@@ -146,11 +149,11 @@ class Thing extends Thingdom {
     public function feed($category, $message)
     {
         $data = array(
-            'token'    => $this->token,
-            'thing_id' => $this->id,
+            'token'         => $this->token,
+            'thing_id'      => $this->id,
             'feed_category' => $category,
-            'message' => $message,
-            'options' => null
+            'message'       => $message,
+            'options'       => null
         );
 
         $response = parent::postToThingdom("feed", $data);
@@ -165,9 +168,9 @@ class Thing extends Thingdom {
     public function status($key, $value, $unit = '')
     {
         $data = array(
-            'token'     => $this->token,
-            'thing_id'  => $this->id,
-            'status_array' => array(
+            'token'         => $this->token,
+            'thing_id'      => $this->id,
+            'status_array'  => array(
                 array(
                     'name' => $key,
                     'value'=> $value,
@@ -188,9 +191,9 @@ class Thing extends Thingdom {
     public function statusArray($statusArray)
     {
         $data = array(
-            'token'     => $this->token,
-            'thing_id'  => $this->id,
-            'status_array' => $statusArray
+            'token'         => $this->token,
+            'thing_id'      => $this->id,
+            'status_array'  => $statusArray
         );
 
         $response = parent::postToThingdom('status', $data);
