@@ -217,7 +217,6 @@ if( !class_exists( 'ThingdomWP' )) {
 			if($post->post_type == 'post' && $this->settings['posts'] == 1) {
 				$thing->feed('new_post', "New post published: {$post_title}");
 			} else if($post->post_type == 'page' && $this->settings['pages'] == 1) {
-				error_log("got here");
 				$thing->feed('new_page', "New page published: {$post_title}");
 			}
 		}
@@ -264,11 +263,13 @@ if( !class_exists( 'ThingdomWP' )) {
 				return false;
 			}
 
+			$page_count = wp_count_posts('page')->publish;
 			$post_count = wp_count_posts()->publish;
 			$comment_count = wp_count_comments()->approved;
 
 			$thing = $thingdom->getThing($this->thingName, $this->thingType);
 
+			$thing->status('page_count', $page_count);
 			$thing->status('post_count', $post_count);
 			$thing->status('comment_count', $comment_count);
 		}
