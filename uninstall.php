@@ -2,7 +2,7 @@
 /**
  * Fired when the plugin is uninstalled
  *
- * @package Add_to_Footer
+ * @package Thingdom
  */
 
 // If uninstall not called from WordPress, then exit
