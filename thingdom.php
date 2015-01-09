@@ -153,10 +153,9 @@ if( !class_exists( 'ThingdomWP' )) {
 
 				if(!empty($this->secret)) {
 					// register all Thingdom-specific admin actions based on plugin configuration
-					if($this->settings['posts'] == 1 || $this->settings['pages'] == 1) {
-						add_action('publish_post', array($this, 'newPost'), 10, 2);
-						add_action('publish_page', array($this, 'newPost'), 10, 2);
-						//add_action('post_updated', array($this, 'updatePost'), 10, 3);
+					if($this->settings['posts'] == 1 || $this->settings['pages'] == 1) {						
+						add_action('transition_comment_status', array($this, 'updateComment'), 10, 3);
+						add_action('transition_post_status', array($this, 'postHandler'), 10, 3);
 					}									
 				}
 			}
@@ -170,14 +169,54 @@ if( !class_exists( 'ThingdomWP' )) {
 		}
 
 		/**
-		 * Method triggered whenever a comment is posted to the site.
+		 * Method triggered whenever a page/post status changes.
 		 *
 		 * @access public
-		 * @param int $post_id
+		 * @param string $new_status
+		 * @param string $old_status
+		 * @param object $post
+		*/		
+
+		public function postHandler($new_status, $old_status, $post)
+		{
+			$thingdom = $this->getThingdom();
+
+			if(!$thingdom) {
+				return false;
+			}
+
+			$post_title = $post->post_title;
+
+			$thing = $thingdom->getThing($this->thingName, $this->thingType);
+
+			if($post->post_type == 'post' && $this->settings['posts'] == 1 && ($new_status == 'publish' && $old_status != 'publish')) {
+				$thing->feed('new_post', "New post published: {$post_title}");
+			} else if($post->post_type == 'page' && $this->settings['pages'] == 1 && ($new_status == 'publish' && $old_status != 'publish')) {
+				$thing->feed('new_page', "New page published: {$post_title}");
+			} else if($post->post_type == 'post' && $this->settings['posts_update'] == 1 && ($new_status == 'publish' && $old_status == 'publish')) {
+				$thing->feed('update_post', "Post Updated: {$post_title}");
+			} else if($post->post_type == 'page' && $this->settings['pages_update'] == 1 && ($new_status == 'publish' && $old_status == 'publish')) {
+				$thing->feed('update_page', "Page Updated: {$post_title}");
+			}
+		}
+
+		/**
+		 * Method triggered whenever an auto-approved comment is posted to the site.
+		 * This typically only happens (depending on configuration) when a logged in user 
+		 * or previously approved user leaves a comment.
+		 *
+		 * @access public
+		 * @param int $comment_id
 		*/				
 
 		public function newComment($comment_id) 
 		{
+			$comment = get_comments(array('ID' => $comment_id));
+			$comment = $comment[0];
+
+			if($comment->comment_approved != 1) {
+				return false;
+			}
 
 			$thingdom = $this->getThingdom();
 			
@@ -185,68 +224,44 @@ if( !class_exists( 'ThingdomWP' )) {
 				return false;
 			}
 
-			$comment = get_comments(array('ID' => $comment_id));
-			$post_title = get_the_title($comment[0]->comment_post_ID);
+			$post_title = get_the_title($comment->comment_post_ID);
 
 			$thing = $thingdom->getThing($this->thingName, $this->thingType);
 
-			$thing->feed('new_comment', "New comment on: {$post_title}\n<br>From: {$comment[0]->comment_author}<br>\nComment: {$comment[0]->comment_content}");
-
+			$thing->feed('new_comment', "New comment on: {$post_title}\n<br>From: {$comment->comment_author}<br>\nComment: {$comment->comment_content}");
 		}		
 
-		/**
-		 * Method triggered whenever a page/post is published.
-		 *
-		 * @access public
-		 * @param int $post_id
-		 * @param object $post
-		*/		
-
-		public function newPost($post_id, $post) 
-		{
-			$thingdom = $this->getThingdom();
-
-			if(!$thingdom) {
-				return false;
-			}
-
-			$post_title = get_the_title($post_id);
-
-			$thing = $thingdom->getThing($this->thingName, $this->thingType);
-
-			if($post->post_type == 'post' && $this->settings['posts'] == 1) {
-				$thing->feed('new_post', "New post published: {$post_title}");
-			} else if($post->post_type == 'page' && $this->settings['pages'] == 1) {
-				$thing->feed('new_page', "New page published: {$post_title}");
-			}
-		}
 
 		/**
-		 * Method triggered whenever a page/post is published.
+		 * Method triggered whenever a comment status changes from the admin panel.
 		 *
 		 * @access public
-		 * @param int $post_id
-		 * @param object $post_after 
-		 * @param object $post_before
+		 * @param string $new_status
+		 * @param string $old_status
+		 * @param object $comment
 		*/				
 
-		public function updatePost($post_id, $post_after, $post_before)
+		public function updateComment($new_status, $old_status, $comment)
 		{
+			if($new_status == $old_status) {
+				return false;
+			}
+
 			$thingdom = $this->getThingdom();
 
 			if(!$thingdom) {
 				return false;
 			}
 
-			$post_title = get_the_title($post_id);
-
 			$thing = $thingdom->getThing($this->thingName, $this->thingType);
 
-			if($post_after->post_type == 'post' && $this->settings['posts_update'] == 1)  {
-				$thing->feed('update_post', "Post updated: {$post_title}");
-			} else if($post_after->post_type == 'page' && $this->settings['pages_update'] == 1) {
-				$thing->feed('update_page', "Page updated: {$post_title}");
+			$post_title = get_the_title($comment->comment_post_ID);
+
+			if($old_status != 'approved' && $new_status == 'approved') {
+				$thing->feed('new_comment', "New comment on: {$post_title}\n<br>From: {$comment->comment_author}<br>\nComment: {$comment->comment_content}");
 			}
+
+
 		}
 
 		/**
