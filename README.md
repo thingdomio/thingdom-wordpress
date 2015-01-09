@@ -29,13 +29,14 @@ sudo apt-get install php5-curl
 ```
 
 ## Getting started
-Unzip files to /wp-content/plugins/thingdom/ and from WordPress admin go to Settings->Thingdom Settings.
+Unzip files to /wp-content/plugins/thingdom/ or install from the WordPress Plugin Directory. Then from WordPress admin go to Settings->Thingdom Settings.
 
 <p>Configure your settings in the screen below:</p>
-<img src="http://oi59.tinypic.com/2vhtaao.jpg" height="300px" />
+<img src="http://oi62.tinypic.com/jijc7t.jpg" height="300px" />
 
 ## Functionality
 
-1. Automatically get notified and notify your readers (with push/text/email) whenever your blog is updated.
-2. Receive push notifications whenever new comments are posted to your site.
-3. Much more to come!
+1. Allow your readers to subscribe and get push notifications whenever new pages/posts are added.
+2. Notify your readers when pages/posts are updated.
+3. Notify your readers whenever new comments are added.
+4. Provide your readers with useful stats about your blog.
